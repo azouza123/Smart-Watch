@@ -1,19 +1,61 @@
 import React, { useState } from 'react';
 import { ClipboardList, Plus, Calendar, Users, CheckCircle, Clock, AlertCircle, X, Edit } from 'lucide-react';
 
+interface Action {
+  id: number;
+  title: string;
+  type: 'maintenance' | 'awareness';
+  status: 'planned' | 'in_progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  assignee: string;
+  dueDate: string;
+  relatedAlerts: number;
+  description?: string;
+}
+
 export function ActionsManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedAction, setSelectedAction] = useState(null);
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   
-  const [actions, setActions] = useState([
-    { id: 1, title: 'Intervention fuite - A201', type: 'maintenance', status: 'in_progress', priority: 'high', assignee: 'Technicien Martin', dueDate: '2025-11-01', relatedAlerts: 1, description: 'Intervention urgente pour résoudre une fuite d\'eau dans le local technique A201.' },
-    { id: 2, title: 'Sensibilisation économies d\'eau - Bâtiment Nord', type: 'awareness', status: 'planned', priority: 'medium', assignee: 'Gestionnaire', dueDate: '2025-11-05', relatedAlerts: 0, description: 'Campagne de sensibilisation sur les économies d\'eau pour les occupants du bâtiment Nord.' },
-    { id: 3, title: 'Remplacement capteur SEN-042', type: 'maintenance', status: 'completed', priority: 'high', assignee: 'Technicien Dupont', dueDate: '2025-10-30', relatedAlerts: 1, description: 'Remplacement du capteur de pression défectueux SEN-042 dans la chaufferie.' },
+  const [actions, setActions] = useState<Action[]>([
+    { 
+      id: 1, 
+      title: 'Intervention fuite - A201', 
+      type: 'maintenance', 
+      status: 'in_progress', 
+      priority: 'high', 
+      assignee: 'Technicien Martin', 
+      dueDate: '2025-11-01', 
+      relatedAlerts: 1, 
+      description: 'Intervention urgente pour résoudre une fuite d\'eau dans le local technique A201.' 
+    },
+    { 
+      id: 2, 
+      title: 'Sensibilisation économies d\'eau - Bâtiment Nord', 
+      type: 'awareness', 
+      status: 'planned', 
+      priority: 'medium', 
+      assignee: 'Gestionnaire', 
+      dueDate: '2025-11-05', 
+      relatedAlerts: 0, 
+      description: 'Campagne de sensibilisation sur les économies d\'eau pour les occupants du bâtiment Nord.' 
+    },
+    { 
+      id: 3, 
+      title: 'Remplacement capteur SEN-042', 
+      type: 'maintenance', 
+      status: 'completed', 
+      priority: 'high', 
+      assignee: 'Technicien Dupont', 
+      dueDate: '2025-10-30', 
+      relatedAlerts: 1, 
+      description: 'Remplacement du capteur de pression défectueux SEN-042 dans la chaufferie.' 
+    },
   ]);
 
-  const [newAction, setNewAction] = useState({
+  const [newAction, setNewAction] = useState<Omit<Action, 'id'>>({
     title: '',
     type: 'maintenance',
     status: 'planned',
@@ -86,16 +128,18 @@ export function ActionsManagement() {
 
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setSelectedAction(prev => ({
-      ...prev,
-      [name]: name === 'relatedAlerts' ? parseInt(value) || 0 : value
-    }));
+    if (selectedAction) {
+      setSelectedAction(prev => ({
+        ...prev!,
+        [name]: name === 'relatedAlerts' ? parseInt(value) || 0 : value
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const actionToAdd = {
+    const actionToAdd: Action = {
       ...newAction,
       id: Math.max(...actions.map(a => a.id), 0) + 1,
     };
@@ -108,22 +152,24 @@ export function ActionsManagement() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    setActions(prevActions => 
-      prevActions.map(action => 
-        action.id === selectedAction.id ? selectedAction : action
-      )
-    );
+    if (selectedAction) {
+      setActions(prevActions => 
+        prevActions.map(action => 
+          action.id === selectedAction.id ? selectedAction : action
+        )
+      );
+    }
 
     setEditModalOpen(false);
     setSelectedAction(null);
   };
 
-  const handleViewDetails = (action: any) => {
+  const handleViewDetails = (action: Action) => {
     setSelectedAction(action);
     setDetailModalOpen(true);
   };
 
-  const handleEdit = (action: any) => {
+  const handleEdit = (action: Action) => {
     setSelectedAction({...action});
     setEditModalOpen(true);
   };

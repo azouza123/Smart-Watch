@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Download, Calendar, TrendingUp } from 'lucide-react';
+import { FileText, Download, Calendar, TrendingUp, Plus } from 'lucide-react';
 
 export function ReportsView() {
   const reports = [
