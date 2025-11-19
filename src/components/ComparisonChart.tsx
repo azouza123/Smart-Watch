@@ -8,7 +8,7 @@ interface ComparisonChartProps {
 export function ComparisonChart({ period }: ComparisonChartProps) {
   const dataByPeriod = {
     day: [
-      { zone: 'Cuisine', current: 85, previous: 95 },
+      { zone: 'Cuisine', current: 85, previous: 100 },
       { zone: 'Salle de bain', current: 120, previous: 140 },
       { zone: 'Toilettes', current: 30, previous: 35 },
       { zone: 'Jardin', current: 10, previous: 10 },
