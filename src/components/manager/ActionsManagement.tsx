@@ -1,12 +1,23 @@
-import React from 'react';
-import { ClipboardList, Plus, Calendar, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ClipboardList, Plus, Calendar, Users, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
 
 export function ActionsManagement() {
-  const actions = [
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actions, setActions] = useState([
     { id: 1, title: 'Intervention fuite - A201', type: 'maintenance', status: 'in_progress', priority: 'high', assignee: 'Technicien Martin', dueDate: '2025-11-01', relatedAlerts: 1 },
     { id: 2, title: 'Sensibilisation économies d\'eau - Bâtiment Nord', type: 'awareness', status: 'planned', priority: 'medium', assignee: 'Gestionnaire', dueDate: '2025-11-05', relatedAlerts: 0 },
     { id: 3, title: 'Remplacement capteur SEN-042', type: 'maintenance', status: 'completed', priority: 'high', assignee: 'Technicien Dupont', dueDate: '2025-10-30', relatedAlerts: 1 },
-  ];
+  ]);
+
+  const [newAction, setNewAction] = useState({
+    title: '',
+    type: 'maintenance',
+    status: 'planned',
+    priority: 'medium',
+    assignee: '',
+    dueDate: '',
+    relatedAlerts: 0
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,6 +45,73 @@ export function ActionsManagement() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewAction(prev => ({
+      ...prev,
+      [name]: name === 'relatedAlerts' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Créer la nouvelle action avec un ID unique
+    const actionToAdd = {
+      ...newAction,
+      id: Math.max(...actions.map(a => a.id)) + 1, // Génère un nouvel ID unique
+    };
+
+    // Ajouter la nouvelle action à la liste
+    setActions(prevActions => [...prevActions, actionToAdd]);
+
+    // Réinitialiser le formulaire et fermer la modale
+    setNewAction({
+      title: '',
+      type: 'maintenance',
+      status: 'planned',
+      priority: 'medium',
+      assignee: '',
+      dueDate: '',
+      relatedAlerts: 0
+    });
+    setIsModalOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // Réinitialiser le formulaire
+    setNewAction({
+      title: '',
+      type: 'maintenance',
+      status: 'planned',
+      priority: 'medium',
+      assignee: '',
+      dueDate: '',
+      relatedAlerts: 0
+    });
+  };
+
+  // Calculer les statistiques en temps réel
+  const getStats = () => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+    
+    const inProgress = actions.filter(action => action.status === 'in_progress').length;
+    const planned = actions.filter(action => action.status === 'planned').length;
+    const completed = actions.filter(action => {
+      if (action.status === 'completed') {
+        const dueDate = new Date(action.dueDate);
+        return dueDate >= sevenDaysAgo;
+      }
+      return false;
+    }).length;
+
+    return { inProgress, planned, completed };
+  };
+
+  const stats = getStats();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -41,36 +119,200 @@ export function ActionsManagement() {
           <h1 className="text-gray-900 mb-2">Actions correctives</h1>
           <p className="text-gray-600">Planification et suivi des interventions</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          onClick={() => setIsModalOpen(true)}
+        >
           <Plus className="w-4 h-4" />
           Nouvelle action
         </button>
       </div>
 
+      {/* Modal pour nouvelle action */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Nouvelle action corrective</h2>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Titre de l'action *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newAction.title}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ex: Intervention fuite - A201"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type d'action
+                  </label>
+                  <select
+                    name="type"
+                    value={newAction.type}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="maintenance">Maintenance</option>
+                    <option value="awareness">Sensibilisation</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Statut
+                  </label>
+                  <select
+                    name="status"
+                    value={newAction.status}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="planned">Planifiée</option>
+                    <option value="in_progress">En cours</option>
+                    <option value="completed">Terminée</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Priorité
+                  </label>
+                  <select
+                    name="priority"
+                    value={newAction.priority}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="low">Basse</option>
+                    <option value="medium">Moyenne</option>
+                    <option value="high">Haute</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assigné à *
+                  </label>
+                  <input
+                    type="text"
+                    name="assignee"
+                    value={newAction.assignee}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Ex: Technicien Martin"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date d'échéance *
+                  </label>
+                  <input
+                    type="date"
+                    name="dueDate"
+                    value={newAction.dueDate}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alertes liées
+                  </label>
+                  <input
+                    type="number"
+                    name="relatedAlerts"
+                    value={newAction.relatedAlerts}
+                    onChange={handleInputChange}
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (optionnel)
+                </label>
+                <textarea
+                  name="description"
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Description détaillée de l'action..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Créer l'action
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Statistiques mises à jour */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
           <div className="flex items-center justify-between mb-2">
             <Clock className="w-8 h-8 text-blue-600" />
-            <span className="text-2xl text-blue-900">1</span>
+            <span className="text-2xl text-blue-900">{stats.inProgress}</span>
           </div>
           <p className="text-sm text-blue-700">En cours</p>
         </div>
         <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
           <div className="flex items-center justify-between mb-2">
             <Calendar className="w-8 h-8 text-amber-600" />
-            <span className="text-2xl text-amber-900">1</span>
+            <span className="text-2xl text-amber-900">{stats.planned}</span>
           </div>
           <p className="text-sm text-amber-700">Planifiées</p>
         </div>
         <div className="bg-green-50 rounded-xl p-6 border border-green-200">
           <div className="flex items-center justify-between mb-2">
             <CheckCircle className="w-8 h-8 text-green-600" />
-            <span className="text-2xl text-green-900">1</span>
+            <span className="text-2xl text-green-900">{stats.completed}</span>
           </div>
           <p className="text-sm text-green-700">Complétées (7j)</p>
         </div>
       </div>
 
+      {/* Liste des actions mise à jour */}
       <div className="space-y-4">
         {actions.map((action) => (
           <div key={action.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
