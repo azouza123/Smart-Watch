@@ -5,10 +5,10 @@ import lombok.*;
 
 @Entity
 @Table(name = "utilisateur")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Utilisateur {
 
     @Id
@@ -21,10 +21,9 @@ public class Utilisateur {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "mot_de_passe", nullable = false)
+    @Column(name = "mot_de_passe")
     private String motDePasse;
 
-    // ADMINISTRATEUR, GESTIONNAIRE, OCCUPANT, TECHNICIEN
     @Enumerated(EnumType.STRING)
     private Role role;
 }
