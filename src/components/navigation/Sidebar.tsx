@@ -14,9 +14,9 @@ import {
   TrendingUp,
   Wrench,
   Database,
-  Droplets
 } from 'lucide-react';
 import { UserRole } from '../../App';
+import logo2 from '../../assets/logo2.png';
 
 interface SidebarProps {
   role: UserRole;
@@ -77,16 +77,18 @@ export function Sidebar({ role, currentView, onNavigate }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      {/* Logo */}
-      <div className={`p-6 bg-gradient-to-r ${getRoleColor()}`}>
-        <div className="flex items-center gap-3 text-white">
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-lg rounded-lg flex items-center justify-center">
-            <Droplets className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-white">SmartWater</h2>
-            <p className="text-xs text-white/80 capitalize">{role}</p>
-          </div>
+      {/* Logo card */}
+      <div className="p-4">
+        <div
+          className={`bg-gradient-to-r ${getRoleColor()} rounded-xl px-4 py-1 flex items-center `}
+        >
+            <img
+              src={logo2}
+              alt="SmartWater logo"
+              className="w-full h-full "
+            />
+          
+          
         </div>
       </div>
 
@@ -106,7 +108,11 @@ export function Sidebar({ role, currentView, onNavigate }: SidebarProps) {
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+              <Icon
+                className={`w-5 h-5 ${
+                  isActive ? 'text-blue-600' : 'text-gray-500'
+                }`}
+              />
               <span className="text-sm">{item.label}</span>
             </button>
           );
