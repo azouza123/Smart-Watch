@@ -1,7 +1,10 @@
 package com.exemple.SmartWatch_backend.serviceImpl;
 
+import com.exemple.SmartWatch_backend.entity.Role;
 import com.exemple.SmartWatch_backend.entity.Utilisateur;
-import com.exemple.SmartWatch_backend.model.*;
+import com.exemple.SmartWatch_backend.model.AuthenticationRequest;
+import com.exemple.SmartWatch_backend.model.AuthenticationResponse;
+import com.exemple.SmartWatch_backend.model.RegisterRequest;
 import com.exemple.SmartWatch_backend.repository.UtilisateurRepository;
 import com.exemple.SmartWatch_backend.security.JwtService;
 import com.exemple.SmartWatch_backend.service.AuthService;
@@ -20,9 +23,29 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
     public AuthenticationResponse register(RegisterRequest request) {
+
+        // 🔒 Empêcher deux admins
+        if (request.getRole() == Role.ADMINISTRATEUR &&
+                utilisateurRepository.existsByRole(Role.ADMINISTRATEUR)) {
+            throw new IllegalStateException("Il existe déjà un administrateur dans le système.");
+        }
+
+        // 🔒 Empêcher deux gestionnaires
+        if (request.getRole() == Role.GESTIONNAIRE &&
+                utilisateurRepository.existsByRole(Role.GESTIONNAIRE)) {
+            throw new IllegalStateException("Il existe déjà un gestionnaire dans le système.");
+        }
+
+        // 🔒 Empêcher deux utilisateurs avec le même email
+        if (utilisateurRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalStateException("Un utilisateur avec cet email existe déjà.");
+        }
+
+        // ✅ Création de l'utilisateur
         Utilisateur utilisateur = Utilisateur.builder()
                 .nom(request.getNom())
                 .prenom(request.getPrenom())
@@ -33,13 +56,8 @@ public class AuthServiceImpl implements AuthService {
 
         utilisateurRepository.save(utilisateur);
 
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                utilisateur.getEmail(),
-                utilisateur.getMotDePasse(),
-                new CustomUserDetailsService(utilisateurRepository)
-                        .loadUserByUsername(utilisateur.getEmail()).getAuthorities()
-        );
-
+        // Génération des tokens
+        UserDetails userDetails = userDetailsService.loadUserByUsername(utilisateur.getEmail());
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
@@ -55,9 +73,7 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
-        UserDetails userDetails = new CustomUserDetailsService(utilisateurRepository)
-                .loadUserByUsername(request.getEmail());
-
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
@@ -67,8 +83,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse refresh(String refreshToken) {
         String username = jwtService.extractUsername(refreshToken);
-        UserDetails userDetails = new CustomUserDetailsService(utilisateurRepository)
-                .loadUserByUsername(username);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (!jwtService.isTokenValid(refreshToken, userDetails)) {
             throw new RuntimeException("Refresh token invalide");
