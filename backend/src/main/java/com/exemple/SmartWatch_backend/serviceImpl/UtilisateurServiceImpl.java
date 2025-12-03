@@ -2,7 +2,10 @@ package com.exemple.SmartWatch_backend.serviceImpl;
 
 import com.exemple.SmartWatch_backend.entity.Utilisateur;
 import com.exemple.SmartWatch_backend.model.UtilisateurDto;
+import com.exemple.SmartWatch_backend.entity.StatutUtilisateur;
+import com.exemple.SmartWatch_backend.model.UtilisateurStatsDto;
 import com.exemple.SmartWatch_backend.repository.UtilisateurRepository;
+import com.exemple.SmartWatch_backend.entity.Role;
 import com.exemple.SmartWatch_backend.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,10 @@ public class UtilisateurServiceImpl implements UtilisateurService {
 
     @Override
     public UtilisateurDto createUtilisateur(UtilisateurDto dto) {
+        if (dto.getStatut() == null) {
+            dto.setStatut(StatutUtilisateur.ACTIF);
+        }
+
         Utilisateur utilisateur = mapToEntity(dto);
         utilisateur = utilisateurRepository.save(utilisateur);
         return mapToDto(utilisateur);
@@ -48,7 +55,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         utilisateur.setEmail(dto.getEmail());
         utilisateur.setMotDePasse(dto.getMotDePasse());
         utilisateur.setRole(dto.getRole());
-
+        utilisateur.setStatut(dto.getStatut());   // 🔹
         utilisateur = utilisateurRepository.save(utilisateur);
         return mapToDto(utilisateur);
     }
@@ -56,6 +63,28 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     @Override
     public void deleteUtilisateur(Long id) {
         utilisateurRepository.deleteById(id);
+    }
+
+    @Override
+    public UtilisateurStatsDto getStats() {
+        long total = utilisateurRepository.count();
+        long admins = utilisateurRepository.countByRole(Role.ADMINISTRATEUR);
+        long gests = utilisateurRepository.countByRole(Role.GESTIONNAIRE);
+        long occs  = utilisateurRepository.countByRole(Role.OCCUPANT);
+        long techs = utilisateurRepository.countByRole(Role.TECHNICIEN);
+
+        return new UtilisateurStatsDto(total, admins, gests, occs, techs);
+    }
+
+    @Override
+    public UtilisateurDto changeStatut(Long id, boolean actif) {
+        Utilisateur utilisateur = utilisateurRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        utilisateur.setStatut(actif ? StatutUtilisateur.ACTIF : StatutUtilisateur.BLOQUE);
+
+        utilisateur = utilisateurRepository.save(utilisateur);
+        return mapToDto(utilisateur);
     }
 
     // --------- mapping ---------
@@ -68,6 +97,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         dto.setEmail(u.getEmail());
         dto.setMotDePasse(u.getMotDePasse());
         dto.setRole(u.getRole());
+        dto.setStatut(u.getStatut());      // 🔹 nouveau
         return dto;
     }
 
@@ -79,6 +109,8 @@ public class UtilisateurServiceImpl implements UtilisateurService {
                 .email(dto.getEmail())
                 .motDePasse(dto.getMotDePasse())
                 .role(dto.getRole())
+                .statut(dto.getStatut())   // 🔹 nouveau
                 .build();
     }
+
 }

@@ -26,4 +26,8 @@ public class Utilisateur {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    // 🔹 nouveau champ
+    @Enumerated(EnumType.STRING)
+    private StatutUtilisateur statut;
 }

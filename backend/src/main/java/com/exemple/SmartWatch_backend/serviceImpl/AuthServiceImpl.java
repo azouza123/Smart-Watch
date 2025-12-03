@@ -8,6 +8,8 @@ import com.exemple.SmartWatch_backend.model.RegisterRequest;
 import com.exemple.SmartWatch_backend.repository.UtilisateurRepository;
 import com.exemple.SmartWatch_backend.security.JwtService;
 import com.exemple.SmartWatch_backend.service.AuthService;
+import com.exemple.SmartWatch_backend.entity.StatutUtilisateur;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -52,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .motDePasse(passwordEncoder.encode(request.getMotDePasse()))
                 .role(request.getRole())
+                .statut(StatutUtilisateur.ACTIF)
                 .build();
 
         utilisateurRepository.save(utilisateur);

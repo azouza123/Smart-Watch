@@ -12,6 +12,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     Optional<Utilisateur> findByEmail(String email);
 
-    // Pour savoir s'il existe AU MOINS un utilisateur avec ce rôle
     boolean existsByRole(Role role);
+
+    // 🔹 pour les stats
+    long countByRole(Role role);
 }

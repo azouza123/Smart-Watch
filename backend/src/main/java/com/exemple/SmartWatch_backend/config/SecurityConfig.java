@@ -37,6 +37,9 @@ public class SecurityConfig {
                         // Gestion des bâtiments : réservé aux admins
                         .requestMatchers("/api/batiments/**").hasRole("ADMINISTRATEUR")
 
+                        .requestMatchers("/api/utilisateurs/**").hasRole("ADMINISTRATEUR")
+
+
                         // le reste : juste authentifié
                         .anyRequest().authenticated()
                 )
