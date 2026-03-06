@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/consommation/**").hasAnyRole("ADMINISTRATEUR", "GESTIONNAIRE", "TECHNICIEN", "OCCUPANT")
                         .requestMatchers("/api/consommation/**").hasAnyRole("ADMINISTRATEUR", "GESTIONNAIRE", "TECHNICIEN")
                         .requestMatchers("/api/objectifs/**").hasAnyRole("ADMINISTRATEUR", "GESTIONNAIRE", "TECHNICIEN", "OCCUPANT")
+                        .requestMatchers("/api/actions/**").hasAnyRole("ADMINISTRATEUR", "GESTIONNAIRE")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

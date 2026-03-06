@@ -5,8 +5,8 @@ import { TopBar } from '../navigation/TopBar';
 import { BuildingsManagement } from '../admin/BuildingsManagement';
 import { UsersManagement } from '../admin/UsersManagement';
 import { SensorsManagement } from '../admin/SensorsManagement';
-import { RulesManagement } from '../admin/RulesManagement';
-import { SystemHealth } from '../admin/SystemHealth';
+
+
 import { AdminDashboard } from '../admin/AdminDashboard';
 
 interface AdminLayoutProps {
@@ -27,10 +27,8 @@ export function AdminLayout({ user, onLogout }: AdminLayoutProps) {
         return <UsersManagement />;
       case 'sensors':
         return <SensorsManagement />;
-      case 'rules':
-        return <RulesManagement />;
-      case 'health':
-        return <SystemHealth />;
+     
+     
       default:
         return <AdminDashboard />;
     }

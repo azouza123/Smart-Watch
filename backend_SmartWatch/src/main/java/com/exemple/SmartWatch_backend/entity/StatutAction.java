@@ -1,4 +1,2 @@
 package com.exemple.SmartWatch_backend.entity;
-
-public class StatutAction {
-}
+public enum StatutAction { PLANNED, IN_PROGRESS, COMPLETED }

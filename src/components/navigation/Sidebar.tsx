@@ -4,11 +4,11 @@ import {
   Building2, 
   Users, 
   Radio, 
-  Shield, 
-  Activity,
+  
+  
   Bell,
   ClipboardList,
-  FileText,
+
   Target,
   Lightbulb,
   TrendingUp,
@@ -30,15 +30,15 @@ const navigationByRole = {
     { id: 'buildings', label: 'Bâtiments & Zones', icon: Building2 },
     { id: 'users', label: 'Utilisateurs', icon: Users },
     { id: 'sensors', label: 'Capteurs', icon: Radio },
-    { id: 'rules', label: 'Règles & Seuils', icon: Shield },
-    { id: 'health', label: 'État du système', icon: Activity },
+  
+   
   ],
   manager: [
     { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
     { id: 'alerts', label: 'Alertes', icon: Bell },
     { id: 'actions', label: 'Actions correctives', icon: ClipboardList },
     { id: 'buildings', label: 'Détails bâtiments', icon: Building2 },
-    { id: 'reports', label: 'Rapports', icon: FileText },
+    
   ],
   occupant: [
     { id: 'dashboard', label: 'Ma consommation', icon: LayoutDashboard },

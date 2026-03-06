@@ -5,7 +5,7 @@ import { TopBar } from '../navigation/TopBar';
 import { ManagerDashboard } from '../manager/ManagerDashboard';
 import { AlertsManagement } from '../manager/AlertsManagement';
 import { ActionsManagement } from '../manager/ActionsManagement';
-import { ReportsView } from '../manager/ReportsView';
+
 import { BuildingDetailsView } from '../manager/BuildingDetailsView';
 
 interface ManagerLayoutProps {
@@ -26,8 +26,7 @@ export function ManagerLayout({ user, onLogout }: ManagerLayoutProps) {
         return <ActionsManagement />;
       case 'buildings':
         return <BuildingDetailsView />;
-      case 'reports':
-        return <ReportsView />;
+     
       default:
         return <ManagerDashboard />;
     }
