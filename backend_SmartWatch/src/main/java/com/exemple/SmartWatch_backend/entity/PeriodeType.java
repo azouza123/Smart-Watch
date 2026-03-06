@@ -1,4 +1,5 @@
 package com.exemple.SmartWatch_backend.entity;
 
-public class PeriodeType {
+public enum PeriodeType {
+    DAY, WEEK, MONTH
 }

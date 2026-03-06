@@ -1,4 +1,8 @@
 package com.exemple.SmartWatch_backend.entity;
 
-public class SeveriteAlerte {
+public enum SeveriteAlerte {
+    LOW,
+    MEDIUM,
+    HIGH,
+    CRITICAL
 }

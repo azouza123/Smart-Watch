@@ -1,4 +1,7 @@
 package com.exemple.SmartWatch_backend.entity;
 
-public class StatutAlerte {
+public enum StatutAlerte {
+    OPEN,
+    IN_PROGRESS,
+    RESOLVED
 }

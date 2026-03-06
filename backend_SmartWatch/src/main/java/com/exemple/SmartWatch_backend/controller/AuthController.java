@@ -2,9 +2,9 @@ package com.exemple.SmartWatch_backend.controller;
 
 import com.exemple.SmartWatch_backend.model.*;
 import com.exemple.SmartWatch_backend.service.AuthService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import lombok.Data;
 
 @RestController
 @RequestMapping("/api/auth")

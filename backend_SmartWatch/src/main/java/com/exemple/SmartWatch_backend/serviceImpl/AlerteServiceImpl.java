@@ -2,7 +2,9 @@ package com.exemple.SmartWatch_backend.serviceImpl;
 
 import com.exemple.SmartWatch_backend.entity.*;
 import com.exemple.SmartWatch_backend.model.AlerteDto;
+import com.exemple.SmartWatch_backend.model.AlerteReadingDto;
 import com.exemple.SmartWatch_backend.model.AlerteStatsDto;
+import com.exemple.SmartWatch_backend.repository.AlerteReadingRepository;
 import com.exemple.SmartWatch_backend.repository.AlerteRepository;
 import com.exemple.SmartWatch_backend.repository.BatimentRepository;
 import com.exemple.SmartWatch_backend.repository.CapteurRepository;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,7 @@ public class AlerteServiceImpl implements AlerteService {
     private final AlerteRepository alerteRepository;
     private final BatimentRepository batimentRepository;
     private final CapteurRepository capteurRepository;
+    private final AlerteReadingRepository alerteReadingRepository; // ✅ NEW
 
     @Override
     public List<AlerteDto> getAll() {
@@ -46,6 +50,8 @@ public class AlerteServiceImpl implements AlerteService {
 
     @Override
     public AlerteDto create(AlerteDto dto) {
+        LocalDateTime triggeredAt = dto.getTriggeredAt() != null ? dto.getTriggeredAt() : LocalDateTime.now();
+
         Alerte alerte = Alerte.builder()
                 .title(dto.getTitle())
                 .type(dto.getType())
@@ -56,7 +62,7 @@ public class AlerteServiceImpl implements AlerteService {
                 .threshold(dto.getThreshold())
                 .actual(dto.getActual())
                 .assignee(dto.getAssignee())
-                .triggeredAt(dto.getTriggeredAt() != null ? dto.getTriggeredAt() : LocalDateTime.now())
+                .triggeredAt(triggeredAt)
                 .build();
 
         if (dto.getBatimentId() != null) {
@@ -68,7 +74,59 @@ public class AlerteServiceImpl implements AlerteService {
                     .ifPresent(alerte::setCapteur);
         }
 
-        return toDto(alerteRepository.save(alerte));
+        Alerte saved = alerteRepository.save(alerte);
+
+        // ✅ Auto-generate realistic readings around the trigger time
+        generateReadings(saved, triggeredAt, dto.getThreshold(), dto.getActual());
+
+        return toDto(saved);
+    }
+
+    // ✅ NEW — generates 12 readings: normal → spike at trigger → recovery
+    private void generateReadings(Alerte alerte, LocalDateTime triggeredAt, Double threshold, Double actual) {
+        if (threshold == null || actual == null) return;
+
+        List<AlerteReading> readings = new ArrayList<>();
+        double base = threshold * 0.6; // normal consumption ~60% of threshold
+        double spike = actual;         // peak = the actual detected value
+
+        for (int i = -6; i <= 5; i++) {
+            LocalDateTime time = triggeredAt.plusMinutes(i * 30L);
+            double value;
+            if (i < -2) {
+                // normal range before event
+                value = base + (Math.random() * threshold * 0.1);
+            } else if (i == -1 || i == 0) {
+                // rising toward spike
+                value = base + (spike - base) * (i == -1 ? 0.6 : 1.0);
+            } else if (i == 1) {
+                // peak
+                value = spike;
+            } else {
+                // gradual recovery
+                value = spike - ((spike - base) * (i - 1) * 0.25);
+                value = Math.max(value, base);
+            }
+
+            readings.add(AlerteReading.builder()
+                    .alerte(alerte)
+                    .time(time)
+                    .value(Math.round(value * 100.0) / 100.0)
+                    .build());
+        }
+
+        alerteReadingRepository.saveAll(readings);
+    }
+
+    @Override
+    public List<AlerteReadingDto> getReadings(Long alerteId) {
+        return alerteReadingRepository.findByAlerteIdOrderByTimeAsc(alerteId)
+                .stream()
+                .map(r -> AlerteReadingDto.builder()
+                        .time(r.getTime())
+                        .value(r.getValue())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override

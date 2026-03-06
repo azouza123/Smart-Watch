@@ -1,12 +1,11 @@
 const API_BASE_URL = 'http://localhost:8081/api';
 
-// Fonction utilitaire pour les appels API
 async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const token = localStorage.getItem('token');
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -19,25 +18,54 @@ async function apiCall<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+    const errorText = await response.text();
+    throw new Error(errorText || `API Error: ${response.statusText}`);
   }
 
   return response.json();
 }
 
 // ==================== AUTH ====================
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  role: 'ADMINISTRATEUR' | 'GESTIONNAIRE' | 'TECHNICIEN' | 'OCCUPANT';
+  nom: string;
+  prenom: string;
+  email: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  motDePasse: string;
+}
+
+export interface RegisterRequest {
+  nom: string;
+  prenom: string;
+  email: string;
+  motDePasse: string;
+  role: 'ADMINISTRATEUR' | 'GESTIONNAIRE' | 'TECHNICIEN' | 'OCCUPANT';
+}
+
 export const authApi = {
-  login: (email: string, password: string) =>
-    apiCall<{ token: string; user: any }>('/auth/login', {
+  login: (email: string, motDePasse: string) =>
+    apiCall<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, motDePasse }),
     }),
 
-  register: (userData: any) =>
-    apiCall<{ token: string; user: any }>('/auth/register', {
+  register: (userData: RegisterRequest) =>
+    apiCall<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
+
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('role');
+  },
 };
 
 // ==================== ADMIN ====================
@@ -171,7 +199,7 @@ export const dashboardApi = {
   getSensorData: () => apiCall<any[]>('/dashboard/sensors'),
 };
 
-// ==================== BÂTIMENTS (utilisé par plusieurs rôles) ====================
+// ==================== BÂTIMENTS ====================
 export const batimentApi = {
   getAll: () => apiCall<any[]>('/batiments'),
   getById: (id: number) => apiCall<any>(`/batiments/${id}`),
@@ -189,7 +217,7 @@ export const batimentApi = {
     apiCall<void>(`/batiments/${id}`, { method: 'DELETE' }),
 };
 
-// ==================== UTILISATEURS (utilisé par plusieurs rôles) ====================
+// ==================== UTILISATEURS ====================
 export const utilisateurApi = {
   getAll: () => apiCall<any[]>('/utilisateurs'),
   getById: (id: number) => apiCall<any>(`/utilisateurs/${id}`),
@@ -205,5 +233,34 @@ export const utilisateurApi = {
     }),
   delete: (id: number) =>
     apiCall<void>(`/utilisateurs/${id}`, { method: 'DELETE' }),
+  getStats: () => apiCall<any>('/utilisateurs/stats'),
+  changeStatus: (id: number, actif: boolean) =>
+    apiCall<any>(`/utilisateurs/${id}/status?actif=${actif}`, {
+      method: 'PUT',
+    }),
 };
 
+// ==================== CAPTEURS ====================
+export const capteurApi = {
+  getAll: () => apiCall<any[]>('/capteurs'),
+  getStats: () => apiCall<any>('/capteurs/stats'),
+  getByBatiment: (batimentId: number) =>
+    apiCall<any[]>(`/capteurs/batiment/${batimentId}`),
+  getById: (id: number) => apiCall<any>(`/capteurs/${id}`),
+  create: (data: any) =>
+    apiCall<any>('/capteurs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: any) =>
+    apiCall<any>(`/capteurs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number) =>
+    apiCall<void>(`/capteurs/${id}`, { method: 'DELETE' }),
+  changeEtat: (id: number, actif: boolean) =>
+    apiCall<any>(`/capteurs/${id}/etat?actif=${actif}`, {
+      method: 'PUT',
+    }),
+};

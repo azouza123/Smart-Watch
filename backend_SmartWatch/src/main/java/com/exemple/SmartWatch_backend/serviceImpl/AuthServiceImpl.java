@@ -64,7 +64,15 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        return new AuthenticationResponse(accessToken, refreshToken);
+        // ✅ Return with role + name
+        return new AuthenticationResponse(
+                accessToken,
+                refreshToken,
+                utilisateur.getRole(),
+                utilisateur.getNom(),
+                utilisateur.getPrenom(),
+                utilisateur.getEmail()
+        );
     }
 
     @Override
@@ -76,11 +84,23 @@ public class AuthServiceImpl implements AuthService {
                 )
         );
 
+        // ✅ Load full user from DB to get role + name
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String accessToken = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
 
-        return new AuthenticationResponse(accessToken, refreshToken);
+        // ✅ Return with role + name
+        return new AuthenticationResponse(
+                accessToken,
+                refreshToken,
+                utilisateur.getRole(),
+                utilisateur.getNom(),
+                utilisateur.getPrenom(),
+                utilisateur.getEmail()
+        );
     }
 
     @Override
@@ -92,7 +112,19 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Refresh token invalide");
         }
 
+        // ✅ Load full user to return updated response
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
         String newAccessToken = jwtService.generateAccessToken(userDetails);
-        return new AuthenticationResponse(newAccessToken, refreshToken);
+
+        return new AuthenticationResponse(
+                newAccessToken,
+                refreshToken,
+                utilisateur.getRole(),
+                utilisateur.getNom(),
+                utilisateur.getPrenom(),
+                utilisateur.getEmail()
+        );
     }
 }

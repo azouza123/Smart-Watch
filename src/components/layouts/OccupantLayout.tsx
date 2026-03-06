@@ -18,33 +18,21 @@ export function OccupantLayout({ user, onLogout }: OccupantLayoutProps) {
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard':
-        return <OccupantDashboard />;
-      case 'goals':
-        return <MyGoals />;
-      case 'alerts':
-        return <MyAlerts />;
-      case 'tips':
-        return <TipsAndCoaching />;
-      case 'comparison':
-        return <MyComparison />;
-      default:
-        return <OccupantDashboard />;
+      case 'dashboard': return <OccupantDashboard user={user} />;
+      case 'goals': return <MyGoals user={user} />;
+      case 'alerts': return <MyAlerts />;
+      case 'tips': return <TipsAndCoaching />;
+      case 'comparison': return <MyComparison />;
+      default: return <OccupantDashboard user={user} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex">
-      <Sidebar 
-        role="occupant" 
-        currentView={currentView} 
-        onNavigate={setCurrentView}
-      />
+      <Sidebar role="occupant" currentView={currentView} onNavigate={setCurrentView} />
       <div className="flex-1 flex flex-col">
         <TopBar user={user} onLogout={onLogout} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {renderView()}
-        </main>
+        <main className="flex-1 overflow-y-auto p-6">{renderView()}</main>
       </div>
     </div>
   );
